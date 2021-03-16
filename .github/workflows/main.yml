@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  schedule:
+    - cron: '0 18 * * *'
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    container: alpine:latest
+    steps:
+      - name: Apk version
+        run: |
+          apk update
+          apk add git
+          echo "MARIADB_VERSION=$(apk search -x mariadb | sed -e 's/mariadb\-//g')" >> $GITHUB_ENV
+      - name: Set env
+        run: |
+          echo $MARIADB_VERSION
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup git
+        run: |
+          git config push.default current
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+      - name: Push Tag
+        run: |
+          set -e
+          sed -i -e "/^# MariaDB Version$/{n;d;}" README.md
+          sed -i -e "/^# MariaDB Version$/a $MARIADB_VERSION" README.md
+          git add README.md
+          set +e
+          git commit -m "Bump version $MARIADB_VERSION from GitHub Actions"
+          set -e
+          git push origin
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        with:
+          tag_name: ${{ env.MARIADB_VERSION }}
+          release_name: Release ${{ env.MARIADB_VERSION}}
+          draft: false
+          prerelease: false
