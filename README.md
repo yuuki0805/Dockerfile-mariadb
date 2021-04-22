@@ -5,7 +5,7 @@ Dockerfile repo for MariaDB
 alpine:latest
 
 # MariaDB Version
-10.5.8-r0
+10.5.9-r0
 
 # Docker Hub repository
 [yuuki0805/mariadb](https://hub.docker.com/r/yuuki0805/mariadb)
